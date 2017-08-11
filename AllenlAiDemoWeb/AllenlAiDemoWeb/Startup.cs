@@ -19,6 +19,14 @@ namespace AllenlAiDemoWeb
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+            var config = builder.Build();
+
+            builder.AddAzureKeyVault(
+                config["KeyVault:KeyVaultUrl"],
+                config["KeyVault:ClientId"],
+                config["KeyVault:ClientPassword"]
+                );
+
             Configuration = builder.Build();
         }
 

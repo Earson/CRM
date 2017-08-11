@@ -26,7 +26,7 @@ namespace AllenlAiDemoWeb.Controllers
         // GET: /<controller>/
         public async Task<IActionResult> Thumbnail(int width, int height)
         {
-            var visionApiKey = Config["VisionApiKey"];
+            var visionApiKey = Config["visionApiKey"];
             var getThumbnailUrl = string.Format(Config["VisionApiUrl"], width, height);
 
             try
