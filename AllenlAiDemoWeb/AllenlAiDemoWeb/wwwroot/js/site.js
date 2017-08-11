@@ -77,9 +77,8 @@ function getThumbnail() {
             }
         };
         start = new Date().getTime();
-        http.open("POST", "https://api.cognitive.azure.cn/vision/v1.0/generateThumbnail?width=" + inputWidth + "&height=" + inputHeight + "&smartCropping=true");
+        http.open("POST", "/Ai/Thumbnail?width=" + inputWidth + "&height=" + inputHeight);
         http.setRequestHeader("content-type", contentType);
-        http.setRequestHeader("Ocp-Apim-Subscription-Key", "3e256431932c49a7ac57f2a59e6fb76f");
         http.responseType = 'arraybuffer';
         http.send(payloadData);
     } catch (err) {
