@@ -18,6 +18,11 @@ namespace AllenlAiDemoWeb.Controllers
             return View();
         }
 
+        public IActionResult Ocr()
+        {
+            return View();
+        }
+
         public IActionResult Error()
         {
             return View();

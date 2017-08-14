@@ -1,0 +1,21 @@
+﻿<div class="row">
+    <h5>选择方式：</h5>
+    <div class="col-md-6">
+        <input type="radio" name="imageSource" id="fromUrl" value="url" checked /> 图片URL
+    </div>
+    <div class="col-md-6">
+        <input type="radio" name="imageSource" id="fromUpload" value="upload" /> 上传图片
+    </div>
+</div>
+<div class="row top-buffer" id="fromUrlDiv">
+    <h5>输入URL</h5>
+    <div class="col-md-12">
+        <input type="url" class="form-control" id="urlInput" placeholder="url" tabindex="1" />
+    </div>
+</div>
+<div class="row top-buffer" id="fromUploadDiv" style="display: none">
+    <h5>上传图片</h5>
+    <div class="col-md-12">
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" class="form-control" id="imageUpload" tabindex="2" />
+    </div>
+</div>

@@ -1,12 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "智能缩略图";
+    ViewData["Title"] = "缩略图";
 }
 
 <div class="row">
     <!-- Heading row -->
     <div class="row">
         <div class="col-md-12">
-            <h1>智能缩略图</h1>
+            <h1>缩略图</h1>
             <p>Azure认知服务-计算机视觉API里的<a href="https://dev.cognitive.azure.cn/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fb">Get Thumbnail API</a>会对图片进行分析，找到感兴趣的区域（ROI），然后根据这个区域按指定大小的比例进行裁剪，最后返回指定大小的缩略图
             </p>
         </div>
@@ -17,27 +17,7 @@
             <div class="panel-body">
                 <h4>输入图片URL或者上传图片，获取缩略图</h4>
                 <div class="col-md-12">
-                    <div class="row">
-                        <h5>选择方式：</h5>
-                        <div class="col-md-6">
-                            <input type="radio" name="imageSource" id="fromUrl" value="url" checked/> 图片URL
-                        </div>
-                        <div class="col-md-6">
-                            <input type="radio" name="imageSource" id="fromUpload" value="upload" /> 上传图片
-                        </div>
-                    </div>
-                    <div class="row top-buffer" id="fromUrlDiv">
-                        <h5>输入URL</h5>
-                        <div class="col-md-12">
-                            <input type="url" class="form-control" id="urlInput" placeholder="url" tabindex="1" />
-                        </div>
-                    </div>
-                    <div class="row top-buffer" id="fromUploadDiv" style="display: none">
-                        <h5>上传图片</h5>
-                        <div class="col-md-12">
-                            <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" class="form-control" id="imageUpload" tabindex="2" />
-                        </div>
-                    </div>
+                    @Html.Partial("_ImageInputPartial")
                     <div class="row top-buffer">
                         <h5>设定期望大小</h5>
                         <div class="col-md-6">
@@ -51,16 +31,7 @@
                     <div class="row">
                         <button class="btn btn-primary btn-block" onclick="getThumbnail()" type="button" id="getThumbnail" tabindex="5">获取缩略图</button>
                     </div>
-                    <div class="row top-buffer" id="result" style="display:none">
-                        <div class="container">
-                            <div class="panel panel-success" id="statusPanel">
-                                <div class="panel-heading" id="statusPanelHeading">
-                                    HTTP Status Code
-                                </div>
-                                <div class="panel-body" id="statusPanelBody">Information</div>
-                            </div>
-                        </div>
-                    </div>
+                    @Html.Partial("_StatusPartial")
                     <div class="row">
                         <h4>缩略图</h4>
                         <div>

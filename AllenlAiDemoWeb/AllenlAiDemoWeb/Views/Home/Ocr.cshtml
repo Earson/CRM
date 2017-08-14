@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "图中读字";
+}
+
+<div class="row">
+    <!-- Heading row -->
+    <div class="row">
+        <div class="col-md-12">
+            <h1>图中读字</h1>
+            <p>
+                Azure认知服务-计算机视觉API里的<a href="https://dev.cognitive.azure.cn/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fc">OCR API</a>
+                可以从图中识别文字，支持多达21种语言，包括中文简体和繁体。出于演示的目的，这里只提供三种选项：自动发现，中文简体和英文。
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="panel panel-primary">
+            <div class="panel-body">
+                <h4>输入图片URL或者上传图片，获取图中文字</h4>
+                <div class="col-md-12">
+                    @Html.Partial("_ImageInputPartial")
+                    <div class="row top-buffer">
+                        <h5>选择获取文字的语言种类</h5>
+                        <select id="textLanguage">
+                            <option selected value="unk">自动发现</option>
+                            <option value="zh-Hans">中文简体</option>
+                            <option value="en">英文</option>
+                        </select>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <button class="btn btn-primary btn-block" onclick="getOcr()" type="button" id="getOcr" tabindex="5">获取图中文字</button>
+                    </div>
+                    @Html.Partial("_StatusPartial")
+                    <div class="row">
+                        <h4>图中文字</h4>
+                        <div class="table-bordered bg-info">
+                            <p id="textInImage">读取的文字将显示在这</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
