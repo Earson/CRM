@@ -67,12 +67,12 @@ function getOcr() {
     var payloadData = imageInputValue[0];
     var contentType = imageInputValue[1];
 
-    //var params = {
-    //    "language": selectedLanguage
-    //};
+    var params = {
+        "language": selectedLanguage
+    };
 
     $.ajax({
-        url: "/Ai/Ocr?language=" + selectedLanguage, //$.param(params),
+        url: "/Ai/Ocr?" + $.param(params),
         headers: {
             'Content-Type': contentType
         },

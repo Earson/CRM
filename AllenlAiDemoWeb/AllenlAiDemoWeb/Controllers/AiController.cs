@@ -65,11 +65,12 @@ namespace AllenlAiDemoWeb.Controllers
                 {
                     foreach (var word in line["words"].Children().ToList())
                     {
-                        strBuilder.Append($"{word["text"].Value<string>()} ");
+                        strBuilder.Append(word["text"].Value<string>());
                     }
+                    strBuilder.Append("<br />");
                 }
             }
-            return strBuilder.ToString().TrimEnd(' ');
+            return strBuilder.ToString();
         }
 
         private async Task<IActionResult> ProcessImageAsync(string url, Stream body, Func<HttpResponseMessage, Task<IActionResult>> handleSuccessfulResponseAsync)
