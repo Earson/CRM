@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "图片分析";
+}
+
+<div class="row">
+    <!-- Heading row -->
+    <div class="row">
+        <div class="col-md-12">
+            <h1>图片分析</h1>
+            <p>
+                Azure认知服务-计算机视觉API里的<a href="https://dev.cognitive.azure.cn/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fe">图片描述API</a>
+                可以对图片内容进行分析，。
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="panel panel-primary">
+            <div class="panel-body">
+                <h4>输入图片URL或者上传图片</h4>
+                <div class="col-md-12">
+                    @Html.Partial("_ImageInputPartial")
+                    <hr />
+                    <div class="row">
+                        <button class="btn btn-primary btn-block" onclick="analyze()" type="button" id="getOcr" tabindex="5">分析图片</button>
+                    </div>
+                    @Html.Partial("_StatusPartial")
+                    <h4>分析结果</h4>
+                    <dl id="anlyzeResult" class="row" style="display:none">                        
+                        <dt class="col-sm-3">类别：</dt>
+                        <dd id="categoriesInImage" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">名人：</dt>
+                        <dd id="celebritiesInImage" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">标签：</dt>
+                        <dd id="imageTags" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">描述：</dt>
+                        <dd id="imageDescription" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">成人内容？：</dt>
+                        <dd id="isAdultContent" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">元数据：</dt>
+                        <dd id="imageMetadata" class="col-sm-9"></dd>
+                        <dt class="col-sm-3">主要颜色：</dt>
+                        <dd id="imageColors" class="col-sm-9"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

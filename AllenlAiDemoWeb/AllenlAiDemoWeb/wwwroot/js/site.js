@@ -97,6 +97,44 @@ function getOcr() {
     $('#progress').show();
 }
 
+function analyze() {
+    var imageInputValue = getImageInput();
+    var payloadData = imageInputValue[0];
+    var contentType = imageInputValue[1];
+
+    $.ajax({
+        url: "/Ai/Analyze",
+        headers: {
+            'Content-Type': contentType
+        },
+        type: "POST",
+        data: payloadData,
+        processData: false, // Don't process the file
+        contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+        success: function (result, xhr) {
+            //var obj = JSON.parse(result);  
+            $('#anlyzeResult').show();
+            document.getElementById('categoriesInImage').innerHTML = result.categories;
+            document.getElementById('celebritiesInImage').innerHTML = result.detail;
+            document.getElementById('imageTags').innerHTML = result.tags;
+            document.getElementById('imageDescription').innerHTML = result.description;
+            document.getElementById('isAdultContent').innerHTML = result.isAudltContent;
+            document.getElementById('imageMetadata').innerHTML = result.metadata;
+            document.getElementById('imageColors').innerHTML = result.color;
+        },
+        error: function (result) {
+            $('#anlyzeResult').hide();
+        },
+        complete: function (xhr) {
+            end = new Date().getTime();
+            showRequestResult(xhr, (end - start));
+        }
+    });
+    start = new Date().getTime();
+    $('#result').hide();
+    $('#progress').show();
+}
+
 function getImageInput() {
     if (fromUrl) {
         var inputUrl = urlInput.value.toString();

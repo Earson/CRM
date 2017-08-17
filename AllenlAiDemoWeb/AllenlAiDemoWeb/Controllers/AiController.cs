@@ -56,6 +56,103 @@ namespace AllenlAiDemoWeb.Controllers
             });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Analyze()
+        {
+            var analyzeUrl = $"{Config["VisionApiBaseUrl"].TrimEnd('/')}/analyze?visualFeatures=Categories,Tags,Description,Color,Adult&details=Celebrities&language=en";
+
+            return await ProcessImageAsync(analyzeUrl, Request.Body, async (response) =>
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var jObj = JObject.Parse(content);
+                var resultObj = new
+                {
+                    categories = GetCategories(jObj),
+                    detail = GetDetails(jObj),
+                    isAudltContent = GetIsAdultContent(jObj),
+                    isRacyContent = GetIsRacyContent(jObj),
+                    tags = GetTags(jObj),
+                    description = GetDescription(jObj),
+                    metadata = GetMetadata(jObj),
+                    color = GetDominantColors(jObj)
+                };
+                return new JsonResult(resultObj);
+            });
+        }
+
+        private string GetCategories(JObject jObj)
+        {            
+            if (jObj["categories"] == null)
+            {
+                return "none";
+            }
+            var strBuilder = new StringBuilder();
+            foreach (var category in jObj["categories"].Children().ToList())
+            {
+                strBuilder.Append($"{category["name"].Value<string>()},");
+            }
+            return (strBuilder.Length == 0 ? "none" : strBuilder.ToString().TrimEnd(','));
+        }
+
+        private string GetDetails(JObject jObj)
+        {
+            if (jObj["categories"] == null)
+            {
+                return "none";
+            }
+
+            var strBuilder = new StringBuilder();
+            foreach (var category in jObj["categories"].Children().ToList())
+            {
+                var detail = category["detail"];
+                if (detail != null)
+                {
+                    foreach (var celebrity in detail["celebrities"].Children().ToList())
+                    {
+                        strBuilder.Append($"{celebrity["name"].Value<string>()},");
+                    }
+                }
+            }
+            return (strBuilder.Length==0 ? "none": strBuilder.ToString().TrimEnd(','));
+        }
+
+        private string GetIsAdultContent(JObject jObj)
+        {
+            return jObj["adult"]["isAdultContent"].Value<bool>() ? "Yes" : "No";
+        }
+
+        private string GetIsRacyContent(JObject jObj)
+        {
+            return jObj["adult"]["isRacyContent"].Value<bool>() ? "Yes" : "No";
+        }
+
+        private string GetTags(JObject jObj)
+        {
+            var strBuilder = new StringBuilder();
+            foreach (var tag in jObj["tags"].Children().ToList())
+            {
+                strBuilder.Append($"{tag["name"].Value<string>()},");
+            }
+            return (strBuilder.Length == 0 ? "none" : strBuilder.ToString().TrimEnd(','));
+        }
+
+        private string GetDescription(JObject jObj)
+        {
+            var highestConfidenceDesc = jObj["description"]["captions"].Children().FirstOrDefault();
+            return highestConfidenceDesc["text"].Value<string>();
+        }
+
+        private string GetMetadata(JObject jObj)
+        {
+            var metaData = jObj["metadata"];
+            return $"width：{metaData["width"].Value<string>()} | height：{metaData["height"].Value<string>()} | format：{metaData["format"].Value<string>()}";
+        }
+
+        private string GetDominantColors(JObject jObj)
+        {
+            return jObj["color"]["dominantColors"].Values<string>().Aggregate((a, b) => { return $"{a},{b}"; });
+        }
+
         private string GetWords(JObject jObj)
         {
             var strBuilder = new StringBuilder();
@@ -112,7 +209,7 @@ namespace AllenlAiDemoWeb.Controllers
                 return new ContentResult()
                 {
                     StatusCode = (int)HttpStatusCode.InternalServerError,
-                    Content = $"Unexpected exception happened {ex.Message}",
+                    Content = $"Unexpected exception happened: {ex.Message}",
                     ContentType = "text/plain; charset=utf-8"
                 };
             }

@@ -23,6 +23,11 @@ namespace AllenlAiDemoWeb.Controllers
             return View();
         }
 
+        public IActionResult Analyze()
+        {
+            return View();
+        }
+
         public IActionResult Error()
         {
             return View();
