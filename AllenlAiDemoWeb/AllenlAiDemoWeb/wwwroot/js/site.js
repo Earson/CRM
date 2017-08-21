@@ -9,7 +9,7 @@ $(document).ready(function () {
             fromUrl = true;
         }
 
-        if (this.value == 'upload') {
+        if (this.value === 'upload') {
             $('#fromUrlDiv').hide();
             $('#fromUploadDiv').show();
             fromUrl = false;
