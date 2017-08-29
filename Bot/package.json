@@ -1,0 +1,25 @@
+{
+  "name": "azaidemobot",
+  "version": "1.0.0",
+  "description": "bot service for azaidemo",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "azure",
+    "ai",
+    "cognitive"
+  ],
+  "author": "allenhula",
+  "license": "ISC",
+  "dependencies": {
+    "botbuilder": "^3.9.1",
+    "dotenv-extended": "^2.0.1",
+    "needle": "^2.0.0",
+    "restify": "^5.2.0",
+    "url": "^0.11.0",
+    "valid-url": "^1.0.9"
+  }
+}

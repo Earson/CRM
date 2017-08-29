@@ -1,0 +1,6 @@
+{
+    "greeting": ["Welcome to AzAiDemo bot!","Hey there. I'm the AzAiDemo bot"],
+    "cantunderstand":"Sorry, I did not understand. Type 'help' if need assistance",
+    "thumbnail_prompt": "You want a thumbnail of your image! Please choose the way to provide image.",
+    "image_choice_options": "Url|Upload"
+}
