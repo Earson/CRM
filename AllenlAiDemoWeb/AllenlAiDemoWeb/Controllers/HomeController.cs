@@ -28,6 +28,11 @@ namespace AllenlAiDemoWeb.Controllers
             return View();
         }
 
+        public IActionResult Bot()
+        {
+            return View();
+        }
+
         public IActionResult Error()
         {
             return View();
