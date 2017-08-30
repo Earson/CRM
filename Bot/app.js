@@ -184,7 +184,7 @@ function showText(session, data) {
                         "type": "TextBlock",
                         "text": data.body.words,
                         "wrap": true,
-                        "color": "good"
+                        "color": "accent"
                     }
                 ]
             }
