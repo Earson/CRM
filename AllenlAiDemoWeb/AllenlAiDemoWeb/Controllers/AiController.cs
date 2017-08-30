@@ -164,7 +164,7 @@ namespace AllenlAiDemoWeb.Controllers
                     {
                         strBuilder.Append(word["text"].Value<string>());
                     }
-                    strBuilder.Append("<br />");
+                    //strBuilder.Append("<br />");
                 }
             }
             return strBuilder.ToString();
