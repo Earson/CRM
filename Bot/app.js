@@ -20,15 +20,20 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 
 server.post('/api/messages', connector.listen());
 
-var bot = new builder.UniversalBot(connector, function (session) {
-    // none match
-    session.send('cantunderstand');
-});
+var bot = new builder.UniversalBot(connector, 
+    {
+        localizerSettings: {
+            botLocalePath: "./locale",
+            defaultLocale: "zh"
+        }
+    });
 
-bot.set('localizerSettings', {
-    botLocalePath: "./locale",
-    defaultLocale: "zh"
-});
+bot.dialog('/', [
+    function (session) {
+        // none match
+        session.send('cantunderstand');
+    }
+]);
 
 bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
@@ -36,7 +41,7 @@ bot.on('conversationUpdate', function (message) {
             if (identity.id === message.address.bot.id) {
                 var reply = new builder.Message()
                     .address(message.address)
-                    .text('greeting');
+                    .text('欢迎访问AzAiDemo机器人!');
                 bot.send(reply);
             }
         });

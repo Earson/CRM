@@ -1,7 +1,7 @@
 {
     "greeting": ["欢迎访问AzAiDemo机器人!","你好，我是AzAiDemo机器人"],
     "cantunderstand":"抱歉我暂时还无法理解你在说什么，请尝试帮助",
-    "help_msg": "当前我能帮忙做以下事情：-.缩略图 -.提取文字 -.分析图片",
+    "help_msg": "当前我能帮忙做以下事情：获取缩略图，提取图中文字，分析图片",
     "hello_back_msg": "您好，请问我能帮你做什么？",
     "invalid_choice": "该选择不在合理范围内",
     "thumbnail_msg": "你想获取图片的缩略图",
