@@ -1,0 +1,116 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "siteName": {
+        "defaultValue": "azaidemobot",
+        "type": "string"
+      },
+      "hostingPlanName": {
+        "type": "string",
+        "defaultValue": "allenlaiplan"//"ServicePlanbcd2eb30-9207"//"allenlappsvcplan"//
+      },
+      "siteLocation": {
+        "type": "string",
+        "defaultValue": "China East"//"East Asia"//
+      },      
+      "repoUrl": {
+        "type": "string",
+        "defaultValue": "https://github.com/allenhula/azure-ai-demo"
+      },
+      "branch": {
+        "type": "string",
+        "defaultValue": "master"
+      },
+      "Project": {
+        "type": "string",
+        "defaultValue": "Bot"
+      },
+      "WEBSITE_NODE_DEFAULT_VERSION": {
+        "type": "string",
+        "defaultValue": "6.11.2"
+      },
+      "MICROSOFT_APP_ID": {
+        "type": "string"
+      },
+      "MICROSOFT_APP_PASSWORD": {
+        "type": "string"
+      },
+      "LUIS_MODEL_URL": {
+        "type": "string"
+      },
+      "AZAI_BASE_URL": {
+        "type": "string"
+      }
+    },
+    "resources": [
+      {
+        "apiVersion": "2014-06-01",
+        "name": "[parameters('siteName')]",
+        "type": "Microsoft.Web/Sites",
+        "location": "[parameters('siteLocation')]",
+        // "dependsOn": [
+        //   "[concat('Microsoft.Web/serverFarms/', parameters('hostingPlanName'))]"
+        // ],
+        "tags": {
+          "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]": "empty"
+        },
+        "properties": {
+          "name": "[parameters('siteName')]",
+          "serverFarm": "[parameters('hostingPlanName')]"
+        },
+        "resources": [
+          {
+            "apiVersion": "2014-04-01",
+            "type": "config",
+            "name": "web",
+            "dependsOn": [
+              "[concat('Microsoft.Web/Sites/', parameters('siteName'))]"
+            ],
+            "properties": {
+              "appSettings": [
+                {
+                  "name": "Project",
+                  "value": "[parameters('Project')]"
+                },
+                {
+                  "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                  "value": "[parameters('WEBSITE_NODE_DEFAULT_VERSION')]"
+                },
+                {
+                  "name": "MICROSOFT_APP_ID",
+                  "value": "[parameters('MICROSOFT_APP_ID')]"
+                },
+                {
+                  "name": "MICROSOFT_APP_PASSWORD",
+                  "value": "[parameters('MICROSOFT_APP_PASSWORD')]"
+                },
+                {
+                    "name": "LUIS_MODEL_URL",
+                    "value": "[parameters('LUIS_MODEL_URL')]"
+                },
+                {
+                    "name": "AZAI_BASE_URL",
+                    "value": "[parameters('AZAI_BASE_URL')]"
+                }
+              ]
+            }
+          },
+          {
+            "apiVersion": "2014-04-01",
+            "name": "web",
+            "type": "sourcecontrols",
+            "dependsOn": [
+              "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]",
+              "[concat('Microsoft.Web/Sites/', parameters('siteName'), '/config/web')]"
+            ],
+            "properties": {
+              "RepoUrl": "[parameters('repoUrl')]",
+              "branch": "[parameters('branch')]",
+              "IsManualIntegration": true
+            }
+          }
+        ]
+      }
+    ]
+  }
