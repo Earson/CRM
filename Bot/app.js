@@ -24,7 +24,7 @@ var bot = new builder.UniversalBot(connector,
     {
         localizerSettings: {
             botLocalePath: "./locale",
-            defaultLocale: "zh"
+            defaultLocale: "zh-Hans"
         }
     });
 
@@ -48,28 +48,41 @@ bot.on('conversationUpdate', function (message) {
     }
 });
 
+// luis recognizer for core understanding
 var luisRecognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
 bot.recognizer(luisRecognizer);
+
+// regular expression recognizer for common scenarios, like greeting, help, cancel, etc...
+/* bot.recognizer(new builder.RegExpRecognizer("HelloIntent", {
+    en_us: /^(hi|hello)/i,
+    zh_cn: /^(你好|哈罗|哈喽)/i
+}));
+bot.recognizer(new builder.RegExpRecognizer("HelpIntent", {
+    en_us: /^(help)/i,
+    zh_cn: /^(帮助|干啥|干什么|做什么|功能)/i
+})); */
 
 bot.dialog('getThumbnail', [
     // step 1: ask for image
     function (session) {
-        session.send('thumbnail_msg');
-        session.beginDialog('askImage');
-    },
+        session.beginDialog('confirmAndAskImage', 'thumbnail_confirm');
+    },    
     // step 2: ask for thumbnail height
     function (session, results) {
+        validateResponse(session, results.response);
         session.dialogData.image = {};
         session.dialogData.image = results.response;
-        builder.Prompts.number(session, 'thumbnail_height');
+        builder.Prompts.number(session, 'thumbnail_height', {maxRetries: 3});
     },
     // step 3: ask for thumbnail width
     function (session, results) {
+        validateResponse(session, results.response);
         session.dialogData.height = results.response;
-        builder.Prompts.number(session, 'thumbnail_width');
+        builder.Prompts.number(session, 'thumbnail_width', {maxRetries: 3});
     },
     // step 4: get thumbnail from cognitive api
     function (session, results) {
+        validateResponse(session, results.response);
         session.dialogData.width = results.response;
         session.send("thumbnail_summary", session.dialogData.height, session.dialogData.width);
         azaiService
@@ -78,17 +91,20 @@ bot.dialog('getThumbnail', [
             .catch(function (error) { handleErrorResponse(session, error); });
     }
 ]).triggerAction({
-    matches: 'Thumbnail'
+    matches: 'Thumbnail',
+    confirmPrompt: 'interrupt_warning'
+}).cancelAction('cancelGetThumbnail', 'cancel_result', {
+    matches: /^(cancel|取消|放弃|算了)/i
 });
 
 bot.dialog('extractText', [
     // step 1: ask for image
     function (session) {
-        session.send('extracttext_msg');
-        session.beginDialog('askImage');
+        session.beginDialog('confirmAndAskImage', 'extracttext_confirm');
     },
     // step 2: get text in image from cognitive api
     function (session, results) {
+        validateResponse(session, results.response);
         session.send("extracttext_summary");
         azaiService
             .extractText(results.response)
@@ -96,17 +112,20 @@ bot.dialog('extractText', [
             .catch(function (error) { handleErrorResponse(session, error); });
     },
 ]).triggerAction({
-    matches: 'ExtractText'
+    matches: 'ExtractText',
+    confirmPrompt: 'interrupt_warning'
+}).cancelAction('cancelGetThumbnail', 'cancel_result', {
+    matches: /^(cancel|取消|放弃|算了)/i
 });
 
 bot.dialog('analyzeImage', [
     // step 1: ask for image
     function (session) {
-        session.send('analyze_msg');
-        session.beginDialog('askImage');
+        session.beginDialog('confirmAndAskImage', 'analyze_confirm');
     },
     // step 2: get image analysis result from cognitive api
     function (session, results) {
+        validateResponse(session, results.response);
         session.send("analyze_summary");
         azaiService
             .analyzeImage(results.response)
@@ -114,7 +133,10 @@ bot.dialog('analyzeImage', [
             .catch(function (error) { handleErrorResponse(session, error); });
     },
 ]).triggerAction({
-    matches: 'Analyze'
+    matches: 'Analyze',
+    confirmPrompt: 'interrupt_warning'
+}).cancelAction('cancelGetThumbnail', 'cancel_result', {
+    matches: /^(cancel|取消|放弃|算了)/i
 });
 
 bot.dialog('help', [
@@ -122,7 +144,10 @@ bot.dialog('help', [
         session.endDialog('help_msg');
     }
 ]).triggerAction({
-    matches: 'Help'
+    matches: /^(help|帮助|功能)/i,
+    onSelectAction: (session, args, next) => {
+        session.beginDialog(args.action, args);
+    }
 });
 
 bot.dialog('hello', [
@@ -130,8 +155,29 @@ bot.dialog('hello', [
         session.endDialog('hello_back_msg');
     }
 ]).triggerAction({
-    matches: 'Hello'
+    matches: /^(hi|hello|你好|哈罗|哈喽)/i
 });
+
+// shared dialogs
+bot.dialog('confirmAndAskImage', [
+    function (session, args) {
+        builder.Prompts.confirm(session, 
+            args,
+            {
+                listStyle: builder.ListStyle.button, 
+                maxRetries: 3
+            });        
+    },
+    function (session, results) {
+        if(results.response) {
+            session.beginDialog('askImage');
+        } else if (results.response === false){
+            session.endConversation('wrong_understanding');
+        } else {
+            session.endConversation('over_attemps');
+        }
+    }
+]);
 
 bot.dialog('askImage', [
     function (session) {
@@ -139,11 +185,18 @@ bot.dialog('askImage', [
             'image_choice_prompt', 
             [imageFrom.Url, imageFrom.Upload],
             {
+                listStyle: builder.ListStyle.button,
                 maxRetries: 3,
                 retryPrompt: 'invalid_choice'
             });
     },
     function (session, results) {
+        if(!results.response) {
+            session.endConversation('over_attemps');
+        }
+        session.on('error', function (err) {
+            session.endConversation('session_error');
+        });
         session.dialogData.image = {};
         session.dialogData.image.from = results.response.entity;
         switch (results.response.entity) {
@@ -160,6 +213,12 @@ bot.dialog('askImage', [
         session.endDialogWithResult({response: session.dialogData.image});
     }
 ]);
+
+function validateResponse(session, response) {
+    if(!response) {
+        session.endConversation('invalid_response');
+    }
+}
 
 function showThumbnail(session, data) { 
     var dataBody = data.body;
@@ -198,7 +257,9 @@ function showText(session, data) {
             .text('extracttext_result')
             .addAttachment(adaptiveCard);
         session.endDialog(msg);
-    }
+    } else {
+        session.endDialog('extracttext_fail');
+    }    
 };
 
 function showAnalysis(session, data) {
@@ -250,11 +311,13 @@ function showAnalysis(session, data) {
             .text('analyze_result')
             .addAttachment(adaptiveCard);
         session.endDialog(msg); 
+    } else {
+        session.endDialog('analyze_fail');
     }
 };
 
 function handleErrorResponse(session, error) {
-    var clientErrorMessage = 'Oops! Something went wrong. Try again later.';
+    var clientErrorMessage = 'azai_invoke_fail';
     if (error.message && error.message.indexOf('Access denied') > -1) {
         clientErrorMessage += "\n" + error.message;
     }
