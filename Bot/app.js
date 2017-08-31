@@ -69,26 +69,35 @@ bot.dialog('getThumbnail', [
     },    
     // step 2: ask for thumbnail height
     function (session, results) {
-        validateResponse(session, results.response);
-        session.dialogData.image = {};
-        session.dialogData.image = results.response;
-        builder.Prompts.number(session, 'thumbnail_height', {maxRetries: 3});
+        if (results.response) {
+            session.dialogData.image = {};
+            session.dialogData.image = results.response;
+            builder.Prompts.number(session, 'thumbnail_height', { maxRetries: 3 });
+        } else {
+            session.endDialog('invalid_response');
+        }
     },
     // step 3: ask for thumbnail width
     function (session, results) {
-        validateResponse(session, results.response);
-        session.dialogData.height = results.response;
-        builder.Prompts.number(session, 'thumbnail_width', {maxRetries: 3});
+        if (results.response) {
+            session.dialogData.height = results.response;
+            builder.Prompts.number(session, 'thumbnail_width', { maxRetries: 3 });
+        } else {
+            session.endDialog('invalid_response');
+        }
     },
     // step 4: get thumbnail from cognitive api
     function (session, results) {
-        validateResponse(session, results.response);
+        if (results.response) {
         session.dialogData.width = results.response;
         session.send("thumbnail_summary", session.dialogData.height, session.dialogData.width);
         azaiService
             .getThumbnail(session.dialogData.height, session.dialogData.width, session.dialogData.image)
             .then(function (data) { showThumbnail(session, data); } )
             .catch(function (error) { handleErrorResponse(session, error); });
+        } else {
+            session.endDialog('invalid_response');
+        }
     }
 ]).triggerAction({
     matches: 'Thumbnail',
@@ -104,13 +113,16 @@ bot.dialog('extractText', [
     },
     // step 2: get text in image from cognitive api
     function (session, results) {
-        validateResponse(session, results.response);
-        session.send("extracttext_summary");
-        azaiService
-            .extractText(results.response)
-            .then(function (data) { showText(session, data); })
-            .catch(function (error) { handleErrorResponse(session, error); });
-    },
+        if(resluts.response) {
+            session.send("extracttext_summary");
+            azaiService
+                .extractText(results.response)
+                .then(function (data) { showText(session, data); })
+                .catch(function (error) { handleErrorResponse(session, error); });
+        } else {
+            session.endDialog('invalid_response');
+        }        
+    }
 ]).triggerAction({
     matches: 'ExtractText',
     confirmPrompt: 'interrupt_warning'
@@ -125,13 +137,16 @@ bot.dialog('analyzeImage', [
     },
     // step 2: get image analysis result from cognitive api
     function (session, results) {
-        validateResponse(session, results.response);
-        session.send("analyze_summary");
-        azaiService
-            .analyzeImage(results.response)
-            .then(function (data) { showAnalysis(session, data); })
-            .catch(function (error) { handleErrorResponse(session, error); });
-    },
+        if (resluts.response) {
+            session.send("analyze_summary");
+            azaiService
+                .analyzeImage(results.response)
+                .then(function (data) { showAnalysis(session, data); })
+                .catch(function (error) { handleErrorResponse(session, error); });
+        } else {
+            session.endDialog('invalid_response');
+        }  
+    }
 ]).triggerAction({
     matches: 'Analyze',
     confirmPrompt: 'interrupt_warning'
@@ -191,21 +206,20 @@ bot.dialog('askImage', [
             });
     },
     function (session, results) {
-        if(!results.response) {
+        if (!results.response) {
             session.endConversation('over_attemps');
         }
-        session.on('error', function (err) {
-            session.endConversation('session_error');
-        });
-        session.dialogData.image = {};
-        session.dialogData.image.from = results.response.entity;
-        switch (results.response.entity) {
-            case imageFrom.Url:
-                builder.Prompts.text(session, 'image_choice_url');
-                break;
-            case imageFrom.Upload:
-                builder.Prompts.attachment(session, 'image_choice_upload');
-                break;
+        else {
+            session.dialogData.image = {};
+            session.dialogData.image.from = results.response.entity;
+            switch (results.response.entity) {
+                case imageFrom.Url:
+                    builder.Prompts.text(session, 'image_choice_url');
+                    break;
+                case imageFrom.Upload:
+                    builder.Prompts.attachment(session, 'image_choice_upload');
+                    break;
+            }
         }
     },
     function (session, results) {
@@ -213,12 +227,6 @@ bot.dialog('askImage', [
         session.endDialogWithResult({response: session.dialogData.image});
     }
 ]);
-
-function validateResponse(session, response) {
-    if(!response) {
-        session.endConversation('invalid_response');
-    }
-}
 
 function showThumbnail(session, data) { 
     var dataBody = data.body;
