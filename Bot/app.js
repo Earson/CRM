@@ -113,7 +113,7 @@ bot.dialog('extractText', [
     },
     // step 2: get text in image from cognitive api
     function (session, results) {
-        if(resluts.response) {
+        if(results.response) {
             session.send("extracttext_summary");
             azaiService
                 .extractText(results.response)
@@ -137,7 +137,7 @@ bot.dialog('analyzeImage', [
     },
     // step 2: get image analysis result from cognitive api
     function (session, results) {
-        if (resluts.response) {
+        if (results.response) {
             session.send("analyze_summary");
             azaiService
                 .analyzeImage(results.response)
