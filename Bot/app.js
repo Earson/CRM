@@ -159,7 +159,7 @@ bot.dialog('help', [
         session.endDialog('help_msg');
     }
 ]).triggerAction({
-    matches: /^(help|帮助|功能)/i,
+    matches: /^(help|帮助|功能|你能干啥|你能干什么)/i,
     onSelectAction: (session, args, next) => {
         session.beginDialog(args.action, args);
     }
