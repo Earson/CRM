@@ -24,7 +24,7 @@ var bot = new builder.UniversalBot(connector,
     {
         localizerSettings: {
             botLocalePath: "./locale",
-            defaultLocale: "zh-Hans"
+            defaultLocale: "zh"
         }
     });
 
@@ -35,25 +35,29 @@ bot.dialog('/', [
     }
 ]);
 
-/* bot.on('conversationUpdate', function (message) {
+bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
-                var reply = new builder.Message()
-                    .address(message.address)
-                    .text('欢迎访问AzAiDemo机器人!');
-                bot.send(reply);
+                bot.beginDialog(message.address, 'pickLocale');
+                //var reply = new builder.Message()
+                //    .address(message.address)
+                //    .text('欢迎访问AzAiDemo机器人!');
+                //bot.send(reply);
             }
         });
     }
-}); */
+}); 
 
 // luis recognizer for core understanding
 var helloR = new builder.LocalizedRegExpRecognizer("HelloIntent", 'hello_regexp');
 var helpR = new builder.LocalizedRegExpRecognizer("HelpIntent",  'help_regexp'); 
 var cancelR = new builder.LocalizedRegExpRecognizer("CancelIntent",  'cancel_regexp');
 var reloadR = new builder.LocalizedRegExpRecognizer("ReloadIntent",  'reload_regexp');
-var luisR = new builder.LuisRecognizer({'zh': process.env.LUIS_MODEL_URL_ZH});
+var luisR = new builder.LuisRecognizer({
+    'zh': process.env.LUIS_MODEL_URL_ZH,
+    'en': process.env.LUIS_MODEL_URL_EN
+});
 let rSet = new builder.IntentRecognizerSet({
     recognizeOrder: builder.RecognizeOrder.series,
     stopIfExactMatch: true,
@@ -176,7 +180,7 @@ bot.dialog('help', [
         builder.Prompts.choice(session, 
             'help_choice_prompt',
             [pickLocaleOption, getThumbnailOption, extractTextOption, analyzeImageOption],
-            {listStyle: builder.ListStyle.list}
+            {listStyle: builder.ListStyle.button}
         );
     },
     function (session, results) {
@@ -215,7 +219,7 @@ bot.dialog('pickLocale', [
         builder.Prompts.choice(session, 
             "locale_choice_prompt", 
             '中文|English',
-            {listStyle: builder.ListStyle.list});
+            {listStyle: builder.ListStyle.button});
     },
     function (session, results) {
         var locale;
@@ -283,11 +287,11 @@ bot.dialog('askImage', [
             switch (results.response.entity) {
                 case fromUrl:
                     session.dialogData.image.from = imageFrom.Url;
-                    builder.Prompts.text(session, '请提供图片的链接');
+                    builder.Prompts.text(session, 'image_choice_url');
                     break;
                 case fromUpload:
                     session.dialogData.image.from = imageFrom.Upload;
-                    builder.Prompts.attachment(session, '请上传图片');
+                    builder.Prompts.attachment(session, 'image_choice_upload');
                     break;
             }
         }
