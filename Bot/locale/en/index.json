@@ -17,7 +17,7 @@
     "locale_choice_prompt": "What's your preferred language to talk?",
     "locale_choice_result": "Ok, we will talk with %s next.",
     "cantunderstand":"Can't understand!",
-    "wrong_understanding": "Sorry I didn't understand your intention correctly, please try another saying!",
+    "wrong_understanding": "Sorry Can't understand, maybe not matching language, please try help!",
     "interrupt_warning": "This will cancel current dialog and enter a new one, are you sure?",
     "session_error": "Something wrong: %s",
     "over_attemps": "Exhausted your 3 chances, ending...",

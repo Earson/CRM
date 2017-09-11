@@ -16,7 +16,7 @@
     "confirm": "你确定吗？",
     "locale_choice_prompt": "你想用哪种语言交流呢？",
     "locale_choice_result": "好的，接下来我们将用 %s 交流",
-    "cantunderstand":"抱歉我暂时还无法理解你在说什么，请输入帮助查看我能帮助做哪些事",
+    "cantunderstand":"抱歉没听懂，可能是语言不对，请输入帮助查看我能帮助做哪些事",
     "wrong_understanding": "额。。。理解错了啊，请尝试输入更匹配的词语",
     "interrupt_warning": "这样会中止当前的对话并进入新的对话，你确定吗？",
     "session_error": "被你玩坏了。。。出错啦，错误是： %s",
