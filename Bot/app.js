@@ -35,19 +35,33 @@ bot.dialog('/', [
     }
 ]);
 
+/* 
 bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
-                bot.beginDialog(message.address, 'pickLocale');
-                //var reply = new builder.Message()
-                //    .address(message.address)
-                //    .text('欢迎访问AzAiDemo机器人!');
-                //bot.send(reply);
+                var reply = new builder.Message()
+                    .address(message.address)
+                    .text('greeting');
+                bot.send(reply);
             }
         });
     }
-}); 
+});
+
+bot.dialog('firstRun', function (session) {
+    session.userData.firstRun = true;
+    session.beginDialog('pickLocale');
+}).triggerAction({
+    onFindAction: function (context, callback) {
+        if (!context.userData.firstRun) {
+            // Return a score of 1.1 to ensure the first run dialog wins
+            callback(null, 1.1);
+        } else {
+            callback(null, 0.0);
+        }
+    }
+}); */
 
 // luis recognizer for core understanding
 var helloR = new builder.LocalizedRegExpRecognizer("HelloIntent", 'hello_regexp');

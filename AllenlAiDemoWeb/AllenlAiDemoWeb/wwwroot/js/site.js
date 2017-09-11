@@ -51,7 +51,7 @@ function getThumbnail() {
         }
     };
     start = new Date().getTime();
-    xhr.open("POST", "/Ai/Thumbnail?width=" + inputWidth + "&height=" + inputHeight);
+    xhr.open("POST", "/ComputerVision/Thumbnail?width=" + inputWidth + "&height=" + inputHeight);
     xhr.setRequestHeader("content-type", contentType);
     xhr.responseType = 'arraybuffer';
     xhr.send(payloadData);
@@ -72,7 +72,7 @@ function getOcr() {
     };
 
     $.ajax({
-        url: "/Ai/Ocr?" + $.param(params),
+        url: "/ComputerVision/Ocr?" + $.param(params),
         headers: {
             'Content-Type': contentType
         },
@@ -103,7 +103,7 @@ function analyze() {
     var contentType = imageInputValue[1];
 
     $.ajax({
-        url: "/Ai/Analyze",
+        url: "/ComputerVision/Analyze",
         headers: {
             'Content-Type': contentType
         },
@@ -133,6 +133,18 @@ function analyze() {
     start = new Date().getTime();
     $('#result').hide();
     $('#progress').show();
+}
+
+function startBot()
+{
+    $.ajax({
+        url: "/Bot/EmbedUrl",
+        type: "GET",
+        success: function (result) {
+            $('#chat2Bot').show();
+            $('#bot').attr("src", result.url);
+        }
+    });
 }
 
 function getImageInput() {

@@ -18,7 +18,7 @@
     "locale_choice_result": "Ok, we will talk with %s next.",
     "cantunderstand":"Can't understand!",
     "wrong_understanding": "Sorry I didn't understand your intention correctly, please try another saying!",
-    "interrupt_warning": "This will cancel current dialog and enter a new one",
+    "interrupt_warning": "This will cancel current dialog and enter a new one, are you sure?",
     "session_error": "Something wrong: %s",
     "over_attemps": "Exhausted your 3 chances, ending...",
     "invalid_response": "Not valid response, ending...",    

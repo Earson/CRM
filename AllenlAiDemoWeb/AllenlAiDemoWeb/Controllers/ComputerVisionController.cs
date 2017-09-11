@@ -16,19 +16,24 @@ using Newtonsoft.Json.Linq;
 
 namespace AllenlAiDemoWeb.Controllers
 {
-    public class AiController : Controller
+    public class ComputerVisionController : Controller
     {
-        private readonly IConfiguration Config;
+        private readonly IConfiguration _config;
+        private HttpClient _httpClient;
 
-        public AiController(IConfiguration configuration)
+        public ComputerVisionController(IConfiguration configuration)
         {
-            Config = configuration;
+            _config = configuration;
+            _httpClient = new HttpClient();
+            var visionApiKeySecretName = _config["KeyVault:VisionApiKeySecretName"];
+            var visionApiKey = _config[visionApiKeySecretName];
+            _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", visionApiKey);
         }
 
         [HttpPost]
         public async Task<IActionResult> Thumbnail(int width, int height)
         {
-            var getThumbnailUrl = $"{Config["VisionApiBaseUrl"].TrimEnd('/')}/generateThumbnail?width={width}&height={height}&smartCropping=true";
+            var getThumbnailUrl = $"{_config["VisionApiBaseUrl"].TrimEnd('/')}/generateThumbnail?width={width}&height={height}&smartCropping=true";
 
             return await ProcessImageAsync(getThumbnailUrl, Request.Body, async (response) =>
             {
@@ -41,9 +46,9 @@ namespace AllenlAiDemoWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Ocr(string language)
         {
-            var ocrUrl = $"{Config["VisionApiBaseUrl"].TrimEnd('/')}/ocr?language={language}&detectOrientation=true";
+            var ocrUrl = $"{_config["VisionApiBaseUrl"].TrimEnd('/')}/ocr?language={language}&detectOrientation=true";
 
-            return await ProcessImageAsync(ocrUrl, Request.Body, async (response) => 
+            return await ProcessImageAsync(ocrUrl, Request.Body, async (response) =>
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var jObj = JObject.Parse(content);
@@ -59,7 +64,7 @@ namespace AllenlAiDemoWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Analyze()
         {
-            var analyzeUrl = $"{Config["VisionApiBaseUrl"].TrimEnd('/')}/analyze?visualFeatures=Categories,Tags,Description,Color,Adult&details=Celebrities&language=en";
+            var analyzeUrl = $"{_config["VisionApiBaseUrl"].TrimEnd('/')}/analyze?visualFeatures=Categories,Tags,Description,Color,Adult&details=Celebrities&language=en";
 
             return await ProcessImageAsync(analyzeUrl, Request.Body, async (response) =>
             {
@@ -81,7 +86,7 @@ namespace AllenlAiDemoWeb.Controllers
         }
 
         private string GetCategories(JObject jObj)
-        {            
+        {
             if (jObj["categories"] == null)
             {
                 return "none";
@@ -113,7 +118,7 @@ namespace AllenlAiDemoWeb.Controllers
                     }
                 }
             }
-            return (strBuilder.Length==0 ? "none": strBuilder.ToString().TrimEnd(','));
+            return (strBuilder.Length == 0 ? "none" : strBuilder.ToString().TrimEnd(','));
         }
 
         private string GetIsAdultContent(JObject jObj)
@@ -172,34 +177,28 @@ namespace AllenlAiDemoWeb.Controllers
 
         private async Task<IActionResult> ProcessImageAsync(string url, Stream body, Func<HttpResponseMessage, Task<IActionResult>> handleSuccessfulResponseAsync)
         {
-            var visionApiKeySecretName = Config["KeyVault:VisionApiKeySecretName"];
-            var visionApiKey = Config[visionApiKeySecretName];
+            
 
             try
             {
-                using (var httpClient = new HttpClient())
+                using (var content = new StreamContent(body))
                 {
-                    httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", visionApiKey);
+                    content.Headers.Add("Content-Type", Request.ContentType);
 
-                    using (var content = new StreamContent(body))
+                    using (var response = await this._httpClient.PostAsync(url, content))
                     {
-                        content.Headers.Add("Content-Type", Request.ContentType);
-
-                        using (var response = await httpClient.PostAsync(url, content))
+                        if (response.IsSuccessStatusCode)
                         {
-                            if (response.IsSuccessStatusCode)
+                            return await handleSuccessfulResponseAsync(response);
+                        }
+                        else
+                        {
+                            return new ContentResult()
                             {
-                                return await handleSuccessfulResponseAsync(response);
-                            }
-                            else
-                            {
-                                return new ContentResult()
-                                {
-                                    StatusCode = (int)response.StatusCode,
-                                    Content = await response.Content.ReadAsStringAsync(),
-                                    ContentType = "text/plain; charset=utf-8"
-                                };
-                            }
+                                StatusCode = (int)response.StatusCode,
+                                Content = await response.Content.ReadAsStringAsync(),
+                                ContentType = "text/plain; charset=utf-8"
+                            };
                         }
                     }
                 }
@@ -213,7 +212,7 @@ namespace AllenlAiDemoWeb.Controllers
                     ContentType = "text/plain; charset=utf-8"
                 };
             }
-            
+
         }
     }
 }
