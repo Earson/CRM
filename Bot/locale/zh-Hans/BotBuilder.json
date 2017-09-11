@@ -1,7 +1,0 @@
-{
-    "default_confirm": "我没听明白。 请选择'是'或'不是'。",
-    "default_error": "被你玩坏了。。。出错啦，错误是： %s",
-    "confirm_yes": "是",
-    "confirm_no": "不是",
-    "default_number": "这好像不是数字. 请输入数字"
-}

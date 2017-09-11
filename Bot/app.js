@@ -35,7 +35,7 @@ bot.dialog('/', [
     }
 ]);
 
-bot.on('conversationUpdate', function (message) {
+/* bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
@@ -46,21 +46,20 @@ bot.on('conversationUpdate', function (message) {
             }
         });
     }
-});
+}); */
 
 // luis recognizer for core understanding
-var luisRecognizer = new builder.LuisRecognizer(process.env.LUIS_MODEL_URL);
-bot.recognizer(luisRecognizer);
-
-// regular expression recognizer for common scenarios, like greeting, help, cancel, etc...
-/* bot.recognizer(new builder.RegExpRecognizer("HelloIntent", {
-    en_us: /^(hi|hello)/i,
-    zh_cn: /^(你好|哈罗|哈喽)/i
-}));
-bot.recognizer(new builder.RegExpRecognizer("HelpIntent", {
-    en_us: /^(help)/i,
-    zh_cn: /^(帮助|干啥|干什么|做什么|功能)/i
-})); */
+var helloR = new builder.LocalizedRegExpRecognizer("HelloIntent", 'hello_regexp');
+var helpR = new builder.LocalizedRegExpRecognizer("HelpIntent",  'help_regexp'); 
+var cancelR = new builder.LocalizedRegExpRecognizer("CancelIntent",  'cancel_regexp');
+var reloadR = new builder.LocalizedRegExpRecognizer("ReloadIntent",  'reload_regexp');
+var luisR = new builder.LuisRecognizer({'zh': process.env.LUIS_MODEL_URL_ZH});
+let rSet = new builder.IntentRecognizerSet({
+    recognizeOrder: builder.RecognizeOrder.series,
+    stopIfExactMatch: true,
+    recognizers: [helloR, helpR, cancelR, reloadR, luisR]
+});
+bot.recognizer(rSet);
 
 bot.dialog('getThumbnail', [
     // step 1: ask for image
@@ -102,8 +101,11 @@ bot.dialog('getThumbnail', [
 ]).triggerAction({
     matches: 'Thumbnail',
     confirmPrompt: 'interrupt_warning'
-}).cancelAction('cancelGetThumbnail', 'cancel_result', {
-    matches: /^(cancel|取消|放弃|算了)/i
+}).cancelAction('cancelGetThumbnail', 'cancel_msg', {
+    matches: 'CancelIntent',
+    confirmPrompt: 'confirm'
+}).reloadAction('startOver', 'reload_msg', {
+    matches: 'ReloadIntent'
 });
 
 bot.dialog('extractText', [
@@ -126,8 +128,11 @@ bot.dialog('extractText', [
 ]).triggerAction({
     matches: 'ExtractText',
     confirmPrompt: 'interrupt_warning'
-}).cancelAction('cancelGetThumbnail', 'cancel_result', {
-    matches: /^(cancel|取消|放弃|算了)/i
+}).cancelAction('cancelExtractText', 'cancel_msg', {
+    matches: 'CancelIntent',
+    confirmPrompt: 'confirm'
+}).reloadAction('startOver', 'reload_msg', {
+    matches: 'ReloadIntent'
 });
 
 bot.dialog('analyzeImage', [
@@ -150,19 +155,51 @@ bot.dialog('analyzeImage', [
 ]).triggerAction({
     matches: 'Analyze',
     confirmPrompt: 'interrupt_warning'
-}).cancelAction('cancelGetThumbnail', 'cancel_result', {
-    matches: /^(cancel|取消|放弃|算了)/i
+}).cancelAction('cancelAnalyzeImage', 'cancel_msg', {
+    matches: 'CancelIntent',
+    confirmPrompt: 'confirm'
+}).reloadAction('startOver', 'reload_msg', {
+    matches: 'ReloadIntent'
 });
+
+var pickLocaleOption;
+var getThumbnailOption;
+var extractTextOption;
+var analyzeImageOption;
 
 bot.dialog('help', [
     function (session) {
-        session.endDialog('help_msg');
+        pickLocaleOption = session.localizer.gettext(session.preferredLocale(), 'pick_locale_option');
+        getThumbnailOption = session.localizer.gettext(session.preferredLocale(), 'get_thumbnail_option');
+        extractTextOption = session.localizer.gettext(session.preferredLocale(), 'extract_text_option');
+        analyzeImageOption = session.localizer.gettext(session.preferredLocale(), 'analyze_image_option');
+        builder.Prompts.choice(session, 
+            'help_choice_prompt',
+            [pickLocaleOption, getThumbnailOption, extractTextOption, analyzeImageOption],
+            {listStyle: builder.ListStyle.list}
+        );
+    },
+    function (session, results) {
+        switch (results.response.entity) {
+            case pickLocaleOption:
+                session.beginDialog('pickLocale');
+                break;
+            case getThumbnailOption:
+                session.beginDialog('getThumbnail');
+                break;
+            case extractTextOption:
+                session.beginDialog('extractText');
+                break;
+            case analyzeImageOption:
+                session.beginDialog('analyzeImage');
+                break;
+        }               
     }
 ]).triggerAction({
-    matches: /^(help|帮助|功能|你能干啥|你能干什么)/i,
-    onSelectAction: (session, args, next) => {
-        session.beginDialog(args.action, args);
-    }
+    matches: 'HelpIntent',
+    // onSelectAction: (session, args, next) => {
+    //     session.beginDialog(args.action, args);
+    // }
 });
 
 bot.dialog('hello', [
@@ -170,8 +207,35 @@ bot.dialog('hello', [
         session.endDialog('hello_back_msg');
     }
 ]).triggerAction({
-    matches: /^(hi|hello|你好|哈罗|哈喽)/i
+    matches: 'HelloIntent'
 });
+
+bot.dialog('pickLocale', [
+    function (session) {
+        builder.Prompts.choice(session, 
+            "locale_choice_prompt", 
+            '中文|English',
+            {listStyle: builder.ListStyle.list});
+    },
+    function (session, results) {
+        var locale;
+        switch (results.response.entity) {
+            case 'English':
+                locale = 'en';
+                break;
+            case '中文':
+                locale = 'zh';
+                break;
+        }
+        session.preferredLocale(locale, function (err) {
+            if (!err) {
+                session.endDialog("locale_choice_result", results.response.entity);
+            } else {
+                session.error(err);
+            }
+        });
+    }
+]);
 
 // shared dialogs
 bot.dialog('confirmAndAskImage', [
@@ -194,11 +258,16 @@ bot.dialog('confirmAndAskImage', [
     }
 ]);
 
+var fromUrl;
+var fromUpload;
+
 bot.dialog('askImage', [
     function (session) {
+        fromUrl = session.localizer.gettext(session.preferredLocale(), 'from_url');
+        fromUpload = session.localizer.gettext(session.preferredLocale(), 'from_upload'); 
         builder.Prompts.choice(session, 
             'image_choice_prompt', 
-            [imageFrom.Url, imageFrom.Upload],
+            [fromUrl, fromUpload],
             {
                 listStyle: builder.ListStyle.button,
                 maxRetries: 3,
@@ -211,13 +280,14 @@ bot.dialog('askImage', [
         }
         else {
             session.dialogData.image = {};
-            session.dialogData.image.from = results.response.entity;
             switch (results.response.entity) {
-                case imageFrom.Url:
-                    builder.Prompts.text(session, 'image_choice_url');
+                case fromUrl:
+                    session.dialogData.image.from = imageFrom.Url;
+                    builder.Prompts.text(session, '请提供图片的链接');
                     break;
-                case imageFrom.Upload:
-                    builder.Prompts.attachment(session, 'image_choice_upload');
+                case fromUpload:
+                    session.dialogData.image.from = imageFrom.Upload;
+                    builder.Prompts.attachment(session, '请上传图片');
                     break;
             }
         }
@@ -227,6 +297,8 @@ bot.dialog('askImage', [
         session.endDialogWithResult({response: session.dialogData.image});
     }
 ]);
+
+
 
 function showThumbnail(session, data) { 
     var dataBody = data.body;
